@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=476">
+    <title>Simple Game | サインアップ</title>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+</head>
+<body>
+    <div id="parent-div">
+        <nav>
+            <li>
+                <a href="/signin">サインイン</a>
+            </li>
+            <li>
+                <a href="/guest">ゲストとしてプレイ</a>
+            </li>
+        </nav>
+        <div id="child-div_up" class="child-div">
+            <p>サインアップ</p>
+            <form action="/signup" method="post" id="form_up" class="form">
+                <div style="float: left">
+                    <label class="box_text">ユーザ名</label>
+                    <br>
+                    <label class="box_text">パスワード</label>
+                    <br>
+                    <label class="box_text">パスワード再入力</label>
+                </div>
+                <input required value="<%= name %>" type="text" name="username" placeholder="7文字以内" maxlength="7"/>
+                <input required type="password" name="password" placeholder="半角英数字16文字以内" maxlength="16"/>
+                <input required type="password" name="repassword" id="password" placeholder="半角英数字16文字以内" maxlength="16"/>
+                <br>
+                <p id="up_msg"><%= msg %></p>
+                <label id="trans_msg"><input type="checkbox" name="trans" value="1"> ゲストのデータを引継ぐ</label>
+                <input type="submit" value="Sign up"/>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

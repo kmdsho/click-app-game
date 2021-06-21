@@ -1,0 +1,26 @@
+{
+  "name": "myapp",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "cookie-parser": "~1.4.4",
+    "cookie-session": "^1.4.0",
+    "date-utils": "^1.2.21",
+    "dayjs": "^1.10.4",
+    "debug": "~2.6.9",
+    "ejs": "~2.6.1",
+    "express": "~4.16.1",
+    "html": "^1.0.0",
+    "http": "^0.0.1-security",
+    "http-errors": "~1.6.3",
+    "morgan": "~1.9.1",
+    "mysql": "^2.18.1",
+    "public-ip": "^4.0.3",
+    "regedit": "^3.0.3",
+    "sessionstorage": "^0.1.0"
+  }
+}

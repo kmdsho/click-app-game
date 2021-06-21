@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Simple Game | サインイン</title>
+    <meta name="viewport" content="width=476">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+<body>
+    <div id="parent-div">
+        <nav>
+            <li>
+                <a href="/signup">サインアップ</a>
+            </li>
+            <li>
+                <a href="/guest">ゲストとしてプレイ</a>
+            </li>
+        </nav>
+        <div id="child-div_in" class="child-div">
+            <p>サインイン</p>
+            <form action="/signin" method="post" id="form_in" class="form">
+                <div style="float: left;">
+                    <label class="box_text">ユーザ名</label>
+                    <br>
+                    <label class="box_text">パスワード</label>
+                </div>
+                <input required value="<%= name %>" type="text" name="username" maxlength="7"/>
+                <input required type="password" name="password" id="password" maxlength="16"/>
+                <span id="icon_in" class="icon">
+                    <img src="../images/eye.png" id="eye">
+                </span>
+                <br>
+                <p id="in_msg"><%= msg %></p>
+                <input type="submit" value="Sign in"/>
+            </form>
+        </div>
+    </div>
+    <script src="/javascripts/eye-icon.js"></script>
+</body>
+</html>

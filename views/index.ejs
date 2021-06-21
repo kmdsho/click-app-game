@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=476">
+    <title>Simple Game</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+<body>
+    <div id="parent-div">
+        <div id="child-div">
+            <nav>
+                <li>
+                    <% if(user){ %>
+                        <a id="user">ようこそ、<span id="name_menu"><%= name %></span>さん</a>
+                    <% }else{ %>
+                        <a id="user">ようこそ、<span id="name">ゲスト</span>さん</a>
+                    <% } %>
+                </li>
+                <li>
+                    <a href="/score">スコア</a>
+                </li>
+                <li>
+                    <a href=<%- link %></a>
+                </li>
+            </nav>
+            <ul>
+                <li>
+                    <a href="/pwauth/useralter">ユーザ名の変更</a>
+                </li>
+                <li>
+                    <a href="/pwauth/pwalter">パスワードの変更</a>
+                </li>
+                <li>
+                    <a href="/pwauth/deluser">ユーザの削除</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <script>
+        const user = "<%= user %>";
+    </script>
+    <script src="/javascripts/not-scroll.js"></script>
+    <script src="/javascripts/auto-logout.js"></script>
+    <script src="/javascripts/main.js"></script>
+</body>
+</html>

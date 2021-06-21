@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=476">
+    <title>Simple Game | リザルト</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+<body>
+    <div id="parent-div">
+        <div>
+            <% if(score < loop){ %>
+                <h1 id="nametag">-SCORE-</h1>
+                <h2 id="resulttag"><%= score %></h2>
+                <h3 id="maxtag">/<%= loop %></h3>
+            <% }else{ %>
+                <h1 id="nametag">-CLEAR TIME-</h1>
+                <h2 id="resulttag"><%= time %></h2>
+            <% } %>
+            <p data-value="<%= user %>" id="select-text">
+                LEVEL: <span id="select-<%= select_lev %>"><%= my_lev %></span>
+            </p>
+        </div>
+        <button onclick="location.href='/'" id="return">Return</button>
+    </div>
+    <script>
+        const user = "<%= user %>";
+    </script>
+    <script src="/javascripts/not-scroll.js"></script>
+    <script src="/javascripts/auto-logout.js"></script>
+</body>
+</html>

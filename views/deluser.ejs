@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=476">
+    <title>Simple Game | ユーザ削除</title>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+</head>
+<body>
+    <div id="parent-div">
+        <div id="child-div_deluser" class="child-div">
+            <p>ユーザの削除</p>
+            <form action="/pwauth/deluser" method="post" id="form_deluser" class="form">
+                <p>ユーザとそのスコアデータが削除されます。<br>元には戻せません。<br><br>本当に削除しますか？</p>
+                <div>
+                    <input type="submit" value="YES"/>
+                    <input type="button" onclick="location.href='/'" value="NO"/>
+                </div>
+            </form>
+        </div>
+        <button onclick="location.href='/'" id="return">Return</button>
+    </div>
+    <script>
+        const user = 1;
+    </script>
+    <script src="/javascripts/not-scroll.js"></script>
+    <script src="/javascripts/auto-logout.js"></script>
+</body>
+</html>

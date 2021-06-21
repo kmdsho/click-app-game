@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=476">
+    <title>Simple Game | パスワード認証</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+<body>
+    <div id="parent-div">
+        <div id="child-div_pwauth" class="child-div">
+            <form action="/pwauth" method="post" id="form_pwauth" class="form">
+                <label class="box_text">現在のパスワード</label>
+                <input required type="password" name="password" id="password_now" maxlength="16"/>
+                <span id="icon_pwauth" class="icon">
+                    <img src="../images/eye.png" id="eye">
+                </span>
+                <br>
+                <p id="pwauth_msg"><%= msg %></p>
+                <input type="submit" value="Next"/>
+            </form>
+        </div>
+        <button onclick="location.href='/'" id="return">Return</button>
+    </div>
+    <script>
+        const user = 1;
+    </script>
+    <script src="/javascripts/eye-icon.js"></script>
+    <script src="/javascripts/auto-logout.js"></script>
+</body>
+</html>
