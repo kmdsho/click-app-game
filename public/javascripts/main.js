@@ -219,7 +219,7 @@ window.addEventListener("DOMContentLoaded", function(){
     cdiv = document.getElementById("child-div");
     start();
 
-    document.getElementById("start").addEventListener("click", function(){
+    document.getElementById("start").addEventListener("click", async function(){
         let first, next;
 
         const select = document.getElementsByName("select");
