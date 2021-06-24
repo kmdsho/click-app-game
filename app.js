@@ -15,9 +15,17 @@ const pool = mysql.createPool({
   user: 'b568f416a852d8',
   password: '66c00005',
   database: 'heroku_e688232a8b6fef7',
-  multipleStatements: true,
-  timezone: 'jst'
+  multipleStatements: true
 });
+
+pool.getConnection(function(error, connection){
+  connection.query(
+    'set time_zone=\'+9:00\';',
+    (error, results) => {
+      console.log(error);
+    }
+  );
+})
 
 exports.pool = pool;
 
