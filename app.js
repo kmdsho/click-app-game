@@ -15,7 +15,8 @@ const pool = mysql.createPool({
   user: 'b568f416a852d8',
   password: '66c00005',
   database: 'heroku_e688232a8b6fef7',
-  multipleStatements: true
+  multipleStatements: true,
+  timezone: 'jst'
 });
 
 exports.pool = pool;
