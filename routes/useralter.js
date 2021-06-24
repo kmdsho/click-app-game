@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const app = require('../app');
 
-const connection = app.connection;
+const pool = app.pool;
 
 router.get('/', function(req, res, next){
     req.session.urlorigin = req.originalUrl;
@@ -25,32 +25,35 @@ router.post('/', function(req, res, next){
     }
 
     if(isAuth){
-        connection.query(
-            `select *
-             from users
-             where name = '${username}';`,
-            (error, results) => {
-                console.log(error);
-                if(results.length){
-                    res.render('useralter', {
-                        name: username,
-                        msg: 'そのユーザ名はすでに使われています'
-                    });
-                }else{
-                    connection.query(
-                        `update users set
-                         name = '${username}'
-                         where user_id = ${userid};`,
-                        (error, results) => {
-                            console.log(error);
-                            req.session.username = username;
-                            req.session.urlorigin = null;
-                            res.redirect('/');
-                        }
-                    );
+        pool.getConnection(function(error, connection){
+            connection.query(
+                `select *
+                from users
+                where name = '${username}';`,
+                (error, results) => {
+                    console.log(error);
+                    if(results.length){
+                        res.render('useralter', {
+                            name: username,
+                            msg: 'そのユーザ名はすでに使われています'
+                        });
+                    }else{
+                        connection.query(
+                            `update users set
+                            name = '${username}'
+                            where user_id = ${userid};`,
+                            (error, results) => {
+                                console.log(error);
+                                req.session.username = username;
+                                req.session.urlorigin = null;
+                                res.redirect('/');
+                            }
+                        );
+                    }
                 }
-            }
-        );
+            );
+            connection.release();
+        });
     }else{
         res.redirect('signin');
     }

@@ -4,7 +4,7 @@ const app = require('../app');
 const dayjs = require('dayjs');
 const sessionstorage = require('sessionstorage');
 
-const connection = app.connection;
+const pool = app.pool;
 
 //スコア表を作る
 function makeTable(results, sw, guestPerson){
@@ -188,28 +188,31 @@ router.get('/', function(req, res, next){
     console.log(`guest: ${guest}`);
 
     if(isAuth){
-        connection.query(
-            `select score, time, date
-             from scores
-             where user_id = ${userid} 
-             and level = 'easy'
-             order by score desc, time, date
-             limit 10;`,  //トップ10
-            (error, results) => {
-                console.log(error);
-                res.render('score', {
-                    isAuth: isAuth,
-                    user_logout: 1,
-                    name: req.session.username,
-                    user: userSelect('person'),
-                    level: levelSelect('easy'),
-                    trWidth: 350,
-                    user_sw: '',
-                    dataLen: results.length,
-                    data: makeTable(results, 0, guest)
-                });
-            }
-        );
+        pool.getConnection(function(error, connection){
+            connection.query(
+                `select score, time, date
+                from scores
+                where user_id = ${userid} 
+                and level = 'easy'
+                order by score desc, time, date
+                limit 10;`,  //トップ10
+                (error, results) => {
+                    console.log(error);
+                    res.render('score', {
+                        isAuth: isAuth,
+                        user_logout: 1,
+                        name: req.session.username,
+                        user: userSelect('person'),
+                        level: levelSelect('easy'),
+                        trWidth: 350,
+                        user_sw: '',
+                        dataLen: results.length,
+                        data: makeTable(results, 0, guest)
+                    });
+                }
+            );
+            connection.release();
+        });
     }else if(guest){
         res.render('score', {
             isAuth: isAuth,
@@ -253,28 +256,31 @@ router.post('/', function(req, res, next){
     }
 
     if(isAuth && user === 'person'){    //ユーザかつ個人である場合
-        connection.query(
-            `select score, time, date
-             from scores
-             where user_id = ${userid}
-             and level = '${level}'
-             order by score desc, time, date
-             limit 10;`,  //トップ10
-            (error, results) => {
-                console.log(error);
-                res.render('score', {
-                    isAuth: isAuth,
-                    user_logout: 1,
-                    name: name,
-                    user: userSelect(user),
-                    level: levelSelect(level),
-                    user_sw: '',
-                    trWidth: 350,
-                    dataLen: results.length,
-                    data: makeTable(results, 0, guest)
-                });
-            }
-        );
+        pool.getConnection(function(error, connection){
+            connection.query(
+                `select score, time, date
+                from scores
+                where user_id = ${userid}
+                and level = '${level}'
+                order by score desc, time, date
+                limit 10;`,  //トップ10
+                (error, results) => {
+                    console.log(error);
+                    res.render('score', {
+                        isAuth: isAuth,
+                        user_logout: 1,
+                        name: name,
+                        user: userSelect(user),
+                        level: levelSelect(level),
+                        user_sw: '',
+                        trWidth: 350,
+                        dataLen: results.length,
+                        data: makeTable(results, 0, guest)
+                    });
+                }
+            );
+            connection.release();
+        });
     }else if(user === 'people'){    //全体である場合
         let user_logout;
         if(isAuth){
@@ -283,28 +289,31 @@ router.post('/', function(req, res, next){
             user_logout = 0;
         }
 
-        connection.query(
-            `select name, score, time, date
-             from users, scores
-             where users.user_id = scores.user_id
-             and level = '${level}'
-             order by score desc, time, date
-             limit 10;`,  //トップ10
-            (error, results) => {
-                console.log(error);
-                res.render('score', {
-                    isAuth: isAuth,
-                    user_logout: user_logout,
-                    name: name,
-                    user: userSelect(user),
-                    level: levelSelect(level),
-                    user_sw: '<th style="width: 106px;">ユーザ</th>',
-                    trWidth: 410,
-                    dataLen: results.length,
-                    data: makeTable(results, 1, 0)
-                });
-            }
-        );
+        pool.getConnection(function(error, connection){
+            connection.query(
+                `select name, score, time, date
+                from users, scores
+                where users.user_id = scores.user_id
+                and level = '${level}'
+                order by score desc, time, date
+                limit 10;`,  //トップ10
+                (error, results) => {
+                    console.log(error);
+                    res.render('score', {
+                        isAuth: isAuth,
+                        user_logout: user_logout,
+                        name: name,
+                        user: userSelect(user),
+                        level: levelSelect(level),
+                        user_sw: '<th style="width: 106px;">ユーザ</th>',
+                        trWidth: 410,
+                        dataLen: results.length,
+                        data: makeTable(results, 1, 0)
+                    });
+                }
+            );
+            connection.release();
+        });
     }else if(guest){    //ゲストかつ個人である場合
         res.render('score', {
             isAuth: isAuth,

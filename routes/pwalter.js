@@ -4,7 +4,7 @@ const app = require('../app');
 const saltRounds = 10;  //ストレッチング回数
 const bcrypt = require('bcrypt');
 
-const connection = app.connection;
+const pool = app.pool;
 
 router.get('/', function(req, res, next){
     req.session.urlorigin = req.originalUrl;
@@ -34,16 +34,19 @@ router.post('/', async function(req, res, next){
 
     if(isAuth){
         if(hashedPassword === hashedRepassword){
-            connection.query(
-                `update users set
-                 hashed_password = '${hashedPassword}'
-                 where user_id = ${userid};`,
-                (error, results) => {
-                    console.log(error);
-                    req.session.urlorigin = null;
-                    res.redirect('/');
-                }
-            );
+            pool.getConnection(function(error, connection){
+                connection.query(
+                    `update users set
+                    hashed_password = '${hashedPassword}'
+                    where user_id = ${userid};`,
+                    (error, results) => {
+                        console.log(error);
+                        req.session.urlorigin = null;
+                        res.redirect('/');
+                    }
+                );
+                connection.release();
+            });
         }else{
             res.render('pwalter', {
                 msg: 'パスワードが一致しません'

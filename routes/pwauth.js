@@ -3,7 +3,7 @@ const router = express.Router();
 const app = require('../app');
 const bcrypt = require('bcrypt');
 
-const connection = app.connection;
+const pool = app.pool;
 
 router.get('/', function(req, res, next){
     if(req.session.urlorigin){
@@ -33,35 +33,38 @@ router.post('/', function(req, res, next){
     }
 
     if(isAuth && view){
-        connection.query(
-            `select *
-            from users
-            where user_id = ${userid};`,
-            (error, results) => {
-                console.log(error);
-                if(bcrypt.compareSync(password, results[0].hashed_password)){
-                    res.render(view, {
-                        name: '',
-                        msg: ''
-                    });
-                }else{
-                    if(req.session.miss){
-                        req.session.miss++;
-                    }else{
-                        req.session.miss = 1;
-                    }
-
-                    if(req.session.miss < 5){
-                        res.render('pwauth', {
-                            msg: 'パスワードが間違っています'
+        pool.getConnection(function(error, connection){
+            connection.query(
+                `select *
+                from users
+                where user_id = ${userid};`,
+                (error, results) => {
+                    console.log(error);
+                    if(bcrypt.compareSync(password, results[0].hashed_password)){
+                        res.render(view, {
+                            name: '',
+                            msg: ''
                         });
                     }else{
-                        req.session.miss = null;
-                        res.redirect('/logout');
+                        if(req.session.miss){
+                            req.session.miss++;
+                        }else{
+                            req.session.miss = 1;
+                        }
+
+                        if(req.session.miss < 5){
+                            res.render('pwauth', {
+                                msg: 'パスワードが間違っています'
+                            });
+                        }else{
+                            req.session.miss = null;
+                            res.redirect('/logout');
+                        }
                     }
                 }
-            }
-        );
+            );
+            connection.release();
+        })
     }else if(view){
         res.redirect('/signin');
     }else{

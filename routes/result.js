@@ -4,7 +4,7 @@ const dayjs = require('dayjs');
 const sessionstorage = require('sessionstorage');
 const app = require('../app');
 
-const connection = app.connection;
+const pool = app.pool;
 
 router.get('/', function(req, res, next){
     res.redirect('/');
@@ -31,13 +31,16 @@ router.post('/', function(req, res, next){
 
     if(isAuth){
         user = 1;
-        connection.query(
-            `insert into scores
-             values (null, ${userid}, '${level}', ${score}, ${time}, '${dayjs().format()}');`,
-            (error, results) => {
-                console.log(error);
-            }
-        );
+        pool.getConnection(function(error, connection){
+            connection.query(
+                `insert into scores
+                values (null, ${userid}, '${level}', ${score}, ${time}, '${dayjs().format()}');`,
+                (error, results) => {
+                    console.log(error);
+                }
+            );
+            connection.release();
+        });
     }else{
         user = 0;
         const scores = {

@@ -10,14 +10,15 @@ const dayjs = require('dayjs');
 
 const app = express();
 
-const connection = mysql.createConnection({
+const pool = mysql.createPool({
   host: 'us-cdbr-east-04.cleardb.com',
   user: 'b568f416a852d8',
   password: '66c00005',
-  database: 'heroku_e688232a8b6fef7'
+  database: 'heroku_e688232a8b6fef7',
+  multipleStatements: true
 });
 
-exports.connection = connection;
+exports.pool = pool;
 
 app.use(
   cookieSession({
@@ -51,25 +52,28 @@ app.use('/*', function(req, res, next){
     if(req.session.check){   //ロックされていないことを確認
       next();
     }else{
-      connection.query(
-        `select *
-         from locks
-         where ip = inet_aton('${req.session.ip}')
-         and unlock_date > now();`,
-        (error, results) => {
-          console.log(error);
-          if(results.length){   //ロックされているかどうか
-            req.session.check = false;
-            res.render('lock', {
-              pathname: req.originalUrl,
-              locktime: dayjs(results[0].unlock_date).diff(dayjs())
-            });
-          }else{
-            req.session.check = true;
-            next();
+      pool.getConnection(function(error, connection){
+        connection.query(
+          `select *
+          from locks
+          where ip = inet_aton('${req.session.ip}')
+          and unlock_date > now();`,
+          (error, results) => {
+            console.log(error);
+            if(results.length){   //ロックされているかどうか
+              req.session.check = false;
+              res.render('lock', {
+                pathname: req.originalUrl,
+                locktime: dayjs(results[0].unlock_date).diff(dayjs())
+              });
+            }else{
+              req.session.check = true;
+              next();
+            }
           }
-        }
-      );
+        );
+        connection.release();
+      });
     }
   }else{
     req.session.method = req.method;
