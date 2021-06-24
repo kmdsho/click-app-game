@@ -70,7 +70,7 @@ router.post('/', function(req, res, next){
                                             ,
                                         unlock_date =
                                             case
-                                                when penalty >= 5 then (from_unixtime(unix_timestamp() + 60 * pow(4, penalty - 5))) + interval 9 hour)
+                                                when penalty >= 5 then (from_unixtime(unix_timestamp() + 60 * pow(4, penalty - 5)) + interval 9 hour)
                                                 else unlock_date
                                                 end
                                         where ip = inet_aton('${ip}')
