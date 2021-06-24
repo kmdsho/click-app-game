@@ -1,4 +1,4 @@
-setInterval(start => {
+const timer = setInterval(start => {
     let dates = "";
     let remainTime = locktime - (new Date().getTime() - start);     //解除までの時間
     console.log("start: " + start);
@@ -7,6 +7,7 @@ setInterval(start => {
     console.log("remaintime: " + remainTime);
 
     if(remainTime < 0){
+        clearInterval(timer);
         window.location.href = pathname;    //解除
     }
 
