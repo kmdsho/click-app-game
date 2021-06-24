@@ -81,6 +81,8 @@ router.post('/', function(req, res, next){
                                         and unlock_date > (now() + interval 9 hour);`,
                                         (error, results) => {
                                             console.log(error);
+                                            console.log(dayjs(results[0].unlock_date).format());
+                                            console.log(dayjs().format());
                                             if(results[1].length){
                                                 req.session.check = false;
                                                 res.render('lock', {
