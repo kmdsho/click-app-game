@@ -66,7 +66,7 @@ app.use('/*', function(req, res, next){
           `select *
           from locks
           where ip = inet_aton('${req.session.ip}')
-          and unlock_date > now();`,
+          and unlock_date > (now() + interval 9 hour);`,
           (error, results) => {
             console.log(error);
             if(results.length){   //ロックされているかどうか

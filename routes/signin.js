@@ -64,13 +64,13 @@ router.post('/', function(req, res, next){
                                         penalty = penalty + 1,
                                         lock_date =
                                             case
-                                                when penalty = 5 then now()
+                                                when penalty = 5 then (now() + interval 9 hour)
                                                 else lock_date
                                                 end
                                             ,
                                         unlock_date =
                                             case
-                                                when penalty >= 5 then from_unixtime(unix_timestamp() + 60 * pow(4, penalty - 5))
+                                                when penalty >= 5 then (from_unixtime(unix_timestamp() + 60 * pow(4, penalty - 5))) + interval 9 hour)
                                                 else unlock_date
                                                 end
                                         where ip = inet_aton('${ip}')
@@ -78,7 +78,7 @@ router.post('/', function(req, res, next){
                                         select *
                                         from locks
                                         where ip = inet_aton('${ip}')
-                                        and unlock_date > now();`,
+                                        and unlock_date > (now() + interval 9 hour);`,
                                         (error, results) => {
                                             console.log(error);
                                             if(results[1].length){
