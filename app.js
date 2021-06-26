@@ -18,15 +18,6 @@ const pool = mysql.createPool({
   multipleStatements: true
 });
 
-pool.getConnection(function(error, connection){
-  connection.query(
-    'set time_zone=\'+9:00\';',
-    (error, results) => {
-      console.log(error);
-    }
-  );
-})
-
 exports.pool = pool;
 
 app.use(
