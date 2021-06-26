@@ -18,6 +18,7 @@ const timer = setInterval(start => {
         dates += hour + ":" + ("0" + min).slice(-2) + ":" + ("0" + sec).slice(-2);
         document.getElementById("unlock").innerHTML = dates;
     }else{
+        clearInterval(timer);
         window.location.href = pathname;    //解除
     }
 }, 100, new Date().getTime());
