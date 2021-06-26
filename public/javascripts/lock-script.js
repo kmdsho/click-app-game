@@ -2,6 +2,8 @@ const timer = setInterval(start => {
     let dates = "";
     let remainTime = locktime - (new Date().getTime() - start);     //解除までの時間
 
+    console.log(remainTime);
+
     if(remainTime < 0){
         remainTime = 0;
         clearInterval(timer);
