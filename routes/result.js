@@ -10,8 +10,8 @@ router.get('/', function(req, res, next){
     res.redirect('/');
 });
 
-router.post('/', function(req, res, next){
-    let score, time, level, loop, user;
+router.post('/', async function(req, res, next){
+    let score, time, level, loop;
 
     if(req.body.ip){
         score = app.body.score;
@@ -25,39 +25,49 @@ router.post('/', function(req, res, next){
         loop = req.body.loop;
     }
 
+    score = parseInt(score);
+    loop = parseInt(loop);
     const userid = req.session.userid;
     const isAuth = Boolean(userid);
     console.log(`isAuth: ${isAuth}`);
 
-    if(isAuth){
-        user = 1;
-        pool.getConnection(function(error, connection){
-            connection.query(
-                `insert into scores
-                values (null, ${userid}, '${level}', ${score}, ${time}, '${dayjs().format()}');`,
-                (error, results) => {
-                    console.log(error);
-                }
-            );
-            connection.release();
-        });
-    }else{
-        user = 0;
-        const scores = {
-            level: level,
-            score: score,
-            time: time,
-            date: dayjs().format()
+    if(score > 0 && score <= loop){
+        if(isAuth){
+            try{
+                connection = await pool.getConnection();
+            }catch(err){
+                console.log(err);
+                return;
+            }
+
+            const sql = 'insert into scores\
+                        values (null, ?, ?, ?, ?, ?);';
+            try{
+                [results, fields] = await connection.query(sql, [userid, level, score, time, dayjs().format()]);
+            }catch(err){
+                console.log('can not connect');
+                console.log(err);
+                return;
+            }
+
+            await connection.release();
+        }else{
+            const scores = {
+                level: level,
+                score: score,
+                time: time,
+                date: dayjs().format()
+            }
+            sessionstorage.setItem('score_' + (sessionstorage.length + 1), scores);
         }
-        sessionstorage.setItem('score_' + (sessionstorage.length + 1), scores);
     }
 
     res.render('result', {
         score: score,
-        loop: parseInt(loop),
+        loop: loop,
         time: time.slice(0, time.indexOf('.') - 2) + ':' + time.slice(time.indexOf('.') - 2),
         select_lev: level,
-        user: user,
+        user: isAuth ? 1 : 0,
         my_lev: level.charAt(0).toUpperCase() + level.slice(1)
     });
 });

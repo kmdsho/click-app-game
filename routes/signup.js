@@ -31,67 +31,79 @@ router.post('/', async function(req, res, next){
     }
 
     const salt = bcrypt.genSaltSync(saltRounds);    //ソルト生成
-    const hashedPassword = await bcrypt.hash(password, salt);   //ハッシュ化(password)
-    const hashedRepassword = await bcrypt.hash(repassword, salt);   //ハッシュ化(repassword)
+    const hashedPassword = await bcrypt.hash(password, salt);   //ハッシュ化(パスワード)
+    const hashedRepassword = await bcrypt.hash(repassword, salt);   //ハッシュ化(パスワード再入力)
 
+    //パスワードとパスワード再入力が一致したかどうか
     if(hashedPassword === hashedRepassword){
-        pool.getConnection(function(error, connection){
-            connection.query(
-                `select *
-                from users
-                where name = '${username}';`,
-                (error, results) => {
-                    console.log(error);
-                    if(results.length){
-                        res.render('signup', {
-                            title: 'signup',
-                            name: username,
-                            msg: 'そのユーザ名はすでに使われています'
-                        });
-                    }else{
-                        connection.query(
-                            `insert into users
-                            values (null, '${username}', '${hashedPassword}');`,
-                            (error, results) => {
-                                console.log(error);
-                                const userid = req.session.userid = results.insertId;
-                                req.session.username = username;
-                                req.session.guest = false;
+        try{
+            connection = await pool.getConnection();
+        }catch(err){
+            console.log(err);
+            return;
+        }
 
-                                //チェックを入れた場合sessionstorageからDBに引継ぐ
-                                if(trans && sessionstorage.length){
-                                    let datas = [];
+        const sql = 'select *\
+                    from users\
+                    where name = ?;';
+        try{
+            [results, fields] = await connection.query(sql, [username]);
+        }catch(err){
+            console.log('can not connect');
+            console.log(err);
+            return;
+        }
 
-                                    for(let i = 0; i < sessionstorage.length; i++){
-                                        datas.push(sessionstorage.getItem('score_' + (i + 1)));
-                                    }
+        if(results.length){
+            res.render('signup', {
+                title: 'signup',
+                name: username,
+                msg: 'そのユーザ名はすでに使われています'
+            });
+        }else{
+            const sql = 'insert into users\
+                        values (null, ?, ?);';
+            try{
+                [results, fields] = await connection.query(sql, [username, hashedPassword]);
+            }catch(err){
+                console.log('can not connect');
+                console.log(err);
+                return;
+            }
 
-                                    for(let i = 0; i < datas.length; i++){
-                                        let score = datas[i].score;
-                                        let time = datas[i].time;
-                                        let date = datas[i].date;
-                                        let level = datas[i].level;
+            const userid = req.session.userid = results.insertId;
+            req.session.username = username;
+            req.session.guest = false;
 
-                                        connection.query(
-                                            `insert into scores
-                                            values (null, ${userid}, '${level}', ${score}, ${time}, '${date}');`,
-                                            (error, results) => {
-                                                console.log(error);
-                                            }
-                                        );
-                                    }
+            //チェックを入れた場合sessionstorageからDBに引継ぐ
+            if(trans && sessionstorage.length){
+                let datas = [];
 
-                                    sessionstorage.clear();     //引継いだら全データ削除
-                                }
+                for(let i = 0; i < sessionstorage.length; i++){
+                    datas.push(sessionstorage.getItem('score_' + (i + 1)));
+                }
 
-                                res.redirect('/');
-                            }
-                        );
+                for(let i = 0; i < datas.length; i++){
+                    let score = datas[i].score;
+                    let time = datas[i].time;
+                    let date = datas[i].date;
+                    let level = datas[i].level;
+
+                    const sql = 'insert into scores\
+                                values (null, ?, ?, ?, ?, ?);';
+                    try{
+                        [results, fields] = await connection.query(sql, [userid, level, score, time, date]);
+                    }catch(err){
+                        console.log('can not connect');
+                        console.log(err);
+                        return;
                     }
                 }
-            );
-            connection.release();
-        });
+                sessionstorage.clear();     //引継いだら全データ削除
+            }
+            res.redirect('/');
+        }
+        await connection.release();
     }else{
         res.render('signup', {
             title: 'signup',

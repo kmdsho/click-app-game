@@ -5,6 +5,7 @@ const dayjs = require('dayjs');
 const sessionstorage = require('sessionstorage');
 
 const pool = app.pool;
+let connection, results, fields;
 
 //スコア表を作る
 function makeTable(results, sw, guestPerson){
@@ -180,7 +181,7 @@ function levelSelect(level){
     }
 }
 
-router.get('/', function(req, res, next){
+router.get('/', async function(req, res, next){
     const userid = req.session.userid;
     const isAuth = Boolean(userid);
     const guest = req.session.guest;
@@ -188,31 +189,39 @@ router.get('/', function(req, res, next){
     console.log(`guest: ${guest}`);
 
     if(isAuth){
-        pool.getConnection(function(error, connection){
-            connection.query(
-                `select score, time, date
-                from scores
-                where user_id = ${userid} 
-                and level = 'easy'
-                order by score desc, time, date
-                limit 10;`,  //トップ10
-                (error, results) => {
-                    console.log(error);
-                    res.render('score', {
-                        isAuth: isAuth,
-                        user_logout: 1,
-                        name: req.session.username,
-                        user: userSelect('person'),
-                        level: levelSelect('easy'),
-                        trWidth: 350,
-                        user_sw: '',
-                        dataLen: results.length,
-                        data: makeTable(results, 0, guest)
-                    });
-                }
-            );
-            connection.release();
+        try{
+            connection = await pool.getConnection();
+        }catch(err){
+            console.log(err);
+            return;
+        }
+
+        const sql = 'select score, time, date\
+                    from scores\
+                    where user_id = ?\
+                    and level = \'easy\'\
+                    order by score desc, time, date\
+                    limit 10;';     //トップ10
+        try{
+            [results, fields] = await connection.query(sql, [userid]);
+        }catch(err){
+            console.log('can not connect');
+            console.log(err);
+            return;
+        }
+
+        res.render('score', {
+            isAuth: isAuth,
+            user_logout: 1,
+            name: req.session.username,
+            user: userSelect('person'),
+            level: levelSelect('easy'),
+            trWidth: 350,
+            user_sw: '',
+            dataLen: results.length,
+            data: makeTable(results, 0, guest)
         });
+        await connection.release();
     }else if(guest){
         res.render('score', {
             isAuth: isAuth,
@@ -230,7 +239,7 @@ router.get('/', function(req, res, next){
     }
 });
 
-router.post('/', function(req, res, next){
+router.post('/', async function(req, res, next){
     let user, level
 
     if(req.body.ip){
@@ -256,31 +265,39 @@ router.post('/', function(req, res, next){
     }
 
     if(isAuth && user === 'person'){    //ユーザかつ個人である場合
-        pool.getConnection(function(error, connection){
-            connection.query(
-                `select score, time, date
-                from scores
-                where user_id = ${userid}
-                and level = '${level}'
-                order by score desc, time, date
-                limit 10;`,  //トップ10
-                (error, results) => {
-                    console.log(error);
-                    res.render('score', {
-                        isAuth: isAuth,
-                        user_logout: 1,
-                        name: name,
-                        user: userSelect(user),
-                        level: levelSelect(level),
-                        user_sw: '',
-                        trWidth: 350,
-                        dataLen: results.length,
-                        data: makeTable(results, 0, guest)
-                    });
-                }
-            );
-            connection.release();
+        try{
+            connection = await pool.getConnection();
+        }catch(err){
+            console.log(err);
+            return;
+        }
+
+        const sql = 'select score, time, date\
+                    from scores\
+                    where user_id = ?\
+                    and level = ?\
+                    order by score desc, time, date\
+                    limit 10;';
+        try{
+            [results, fields] = await connection.query(sql, [userid, level]);
+        }catch(err){
+            console.log('can not connect');
+            console.log(err);
+            return;
+        }
+
+        res.render('score', {
+            isAuth: isAuth,
+            user_logout: 1,
+            name: name,
+            user: userSelect(user),
+            level: levelSelect(level),
+            user_sw: '',
+            trWidth: 350,
+            dataLen: results.length,
+            data: makeTable(results, 0, guest)
         });
+        await connection.release();
     }else if(user === 'people'){    //全体である場合
         let user_logout;
         if(isAuth){
@@ -289,31 +306,39 @@ router.post('/', function(req, res, next){
             user_logout = 0;
         }
 
-        pool.getConnection(function(error, connection){
-            connection.query(
-                `select name, score, time, date
-                from users, scores
-                where users.user_id = scores.user_id
-                and level = '${level}'
-                order by score desc, time, date
-                limit 10;`,  //トップ10
-                (error, results) => {
-                    console.log(error);
-                    res.render('score', {
-                        isAuth: isAuth,
-                        user_logout: user_logout,
-                        name: name,
-                        user: userSelect(user),
-                        level: levelSelect(level),
-                        user_sw: '<th style="width: 106px;">ユーザ</th>',
-                        trWidth: 410,
-                        dataLen: results.length,
-                        data: makeTable(results, 1, 0)
-                    });
-                }
-            );
-            connection.release();
+        try{
+            connection = await pool.getConnection();
+        }catch(err){
+            console.log(err);
+            return;
+        }
+
+        const sql = 'select name, score, time, date\
+                    from users, scores\
+                    where users.user_id = scores.user_id\
+                    and level = ?\
+                    order by score desc, time, date\
+                    limit 10;';
+        try{
+            [results, fields] = await connection.query(sql, [level]);
+        }catch(err){
+            console.log('can not connect');
+            console.log(err);
+            return;
+        }
+
+        res.render('score', {
+            isAuth: isAuth,
+            user_logout: user_logout,
+            name: name,
+            user: userSelect(user),
+            level: levelSelect(level),
+            user_sw: '<th style="width: 106px;">ユーザ</th>',
+            trWidth: 410,
+            dataLen: results.length,
+            data: makeTable(results, 1, 0)
         });
+        await connection.release();
     }else if(guest){    //ゲストかつ個人である場合
         res.render('score', {
             isAuth: isAuth,

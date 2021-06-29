@@ -34,19 +34,27 @@ router.post('/', async function(req, res, next){
 
     if(isAuth){
         if(hashedPassword === hashedRepassword){
-            pool.getConnection(function(error, connection){
-                connection.query(
-                    `update users set
-                    hashed_password = '${hashedPassword}'
-                    where user_id = ${userid};`,
-                    (error, results) => {
-                        console.log(error);
-                        req.session.urlorigin = null;
-                        res.redirect('/');
-                    }
-                );
-                connection.release();
-            });
+            try{
+                connection = await pool.getConnection();
+            }catch(err){
+                console.log(err);
+                return;
+            }
+
+            const sql = 'update users set\
+                        hashed_password = ?\
+                        where user_id = ?;';
+            try{
+                [results, fields] = await connection.query(sql, [hashedPassword, userid]);
+            }catch(err){
+                console.log('can not connect');
+                console.log(err);
+                return;
+            }
+
+            req.session.urlorigin = null;
+            res.redirect('/');
+            await connection.release();
         }else{
             res.render('pwalter', {
                 msg: 'パスワードが一致しません'

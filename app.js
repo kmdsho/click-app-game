@@ -4,20 +4,20 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cookieSession = require('cookie-session');
-const mysql = require('mysql');
+const mysql = require('mysql2/promise');
 const secret = 'secretCuisine123';
 const dayjs = require('dayjs');
-
 const app = express();
 
-const pool = mysql.createPool({
+const db_setting = {
   host: 'us-cdbr-east-04.cleardb.com',
   user: 'b568f416a852d8',
   password: '66c00005',
   database: 'heroku_e688232a8b6fef7',
   multipleStatements: true
-});
+}
 
+const pool = mysql.createPool(db_setting);
 exports.pool = pool;
 
 app.use(
@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/*', function(req, res, next){
+app.use('/*', async function(req, res, next){
   if(req.body.ip){
     req.session.ip = req.body.ip;  //IPをアドレスをセッションに保存(再取得が不要になる)
     if(req.session.method === 'GET'){
@@ -48,32 +48,43 @@ app.use('/*', function(req, res, next){
     }
   }
 
-  if(req.session.ip){     //IPアドレスを一度でも取得したかどうか
-    if(req.session.check){   //ロックされていないことを確認
+  //IPアドレスを一度でも取得したかどうか
+  if(req.session.ip){
+    //ロックされていないことを確認
+    if(req.session.check){
       next();
     }else{
-      pool.getConnection(function(error, connection){
-        connection.query(
-          `select *
-          from locks
-          where ip = inet_aton('${req.session.ip}')
-          and unlock_date > (now() + interval 9 hour);`,
-          (error, results) => {
-            console.log(error);
-            if(results.length){   //ロックされているかどうか
-              req.session.check = false;
-              res.render('lock', {
-                pathname: req.originalUrl,
-                locktime: dayjs(results[0].unlock_date).diff(dayjs())
-              });
-            }else{
-              req.session.check = true;
-              next();
-            }
-          }
-        );
-        connection.release();
-      });
+      try{
+        connection = await pool.getConnection();
+      }catch(err){
+        console.log(err);
+        return;
+      }
+
+      const sql = 'select *\
+                  from locks\
+                  where ip = inet_aton(?)\
+                  and unlock_date > (now() + interval 9 hour);';
+      try{
+        [results, fields] = await connection.query(sql, [req.session.ip]);
+      }catch(err){
+        console.log('can not connect');
+        console.log(err);
+        return;
+      }
+
+      //ロックされているかどうか
+      if(results.length){
+        req.session.check = false;
+        res.render('lock', {
+          pathname: req.originalUrl,
+          locktime: dayjs(results[0].unlock_date).diff(dayjs())
+        });
+      }else{
+        req.session.check = true;
+        next();
+      }
+      await connection.release();
     }
   }else{
     req.session.method = req.method;

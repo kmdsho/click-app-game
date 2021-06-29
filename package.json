@@ -18,7 +18,7 @@
     "http": "^0.0.1-security",
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
-    "mysql": "^2.18.1",
+    "mysql2": "^2.2.5",
     "public-ip": "^4.0.3",
     "regedit": "^3.0.3",
     "sessionstorage": "^0.1.0"

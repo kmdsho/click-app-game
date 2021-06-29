@@ -13,7 +13,7 @@ router.get('/', function(req, res, next){
     }
 });
 
-router.post('/', function(req, res, next){
+router.post('/', async function(req, res, next){
     const userid = req.session.userid;
     const isAuth = Boolean(userid);
     let username;
@@ -25,35 +25,46 @@ router.post('/', function(req, res, next){
     }
 
     if(isAuth){
-        pool.getConnection(function(error, connection){
-            connection.query(
-                `select *
-                from users
-                where name = '${username}';`,
-                (error, results) => {
-                    console.log(error);
-                    if(results.length){
-                        res.render('useralter', {
-                            name: username,
-                            msg: 'そのユーザ名はすでに使われています'
-                        });
-                    }else{
-                        connection.query(
-                            `update users set
-                            name = '${username}'
-                            where user_id = ${userid};`,
-                            (error, results) => {
-                                console.log(error);
-                                req.session.username = username;
-                                req.session.urlorigin = null;
-                                res.redirect('/');
-                            }
-                        );
-                    }
-                }
-            );
-            connection.release();
-        });
+        try{
+            connection = await pool.getConnection();
+        }catch(err){
+            console.log(err);
+            return;
+        }
+
+        const sql = 'select *\
+                    from users\
+                    where name = ?;';
+        try{
+            [results, fields] = await connection.query(sql, [username]);
+        }catch(err){
+            console.log('can not connect');
+            console.log(err);
+            return;
+        }
+
+        if(results.length){
+            res.render('useralter', {
+                name: username,
+                msg: 'そのユーザ名はすでに使われています'
+            });
+        }else{
+            const sql = 'update users set\
+                        name = ?\
+                        where user_id = ?;';
+            try{
+                [results, fields] = await connection.query(sql, [username, userid]);
+            }catch(err){
+                console.log('can not connect');
+                console.log(err);
+                return;
+            }
+
+            req.session.username = username;
+            req.session.urlorigin = null;
+            res.redirect('/');
+        }
+        await connection.release();
     }else{
         res.redirect('signin');
     }

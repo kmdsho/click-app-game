@@ -2,8 +2,6 @@ const timer = setInterval(start => {
     let dates = "";
     let remainTime = locktime - (new Date().getTime() - start);     //解除までの時間
 
-    console.log(remainTime);
-
     if(remainTime >= 0){
         let remainDate = new Date(remainTime);
         let days = parseInt(remainTime / (1000 * 60 * 60 * 24));    //残り日数

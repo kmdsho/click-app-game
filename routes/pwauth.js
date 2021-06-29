@@ -15,7 +15,7 @@ router.get('/', function(req, res, next){
     }
 });
 
-router.post('/', function(req, res, next){
+router.post('/', async function(req, res, next){
     const url = req.session.urlorigin;
     const userid = req.session.userid;
     const isAuth = Boolean(userid);
@@ -33,38 +33,46 @@ router.post('/', function(req, res, next){
     }
 
     if(isAuth && view){
-        pool.getConnection(function(error, connection){
-            connection.query(
-                `select *
-                from users
-                where user_id = ${userid};`,
-                (error, results) => {
-                    console.log(error);
-                    if(bcrypt.compareSync(password, results[0].hashed_password)){
-                        res.render(view, {
-                            name: '',
-                            msg: ''
-                        });
-                    }else{
-                        if(req.session.miss){
-                            req.session.miss++;
-                        }else{
-                            req.session.miss = 1;
-                        }
+        try{
+            connection = await pool.getConnection();
+        }catch(err){
+            console.log(err);
+            return;
+        }
 
-                        if(req.session.miss < 5){
-                            res.render('pwauth', {
-                                msg: 'パスワードが間違っています'
-                            });
-                        }else{
-                            req.session.miss = null;
-                            res.redirect('/logout');
-                        }
-                    }
-                }
-            );
-            connection.release();
-        })
+        const sql = 'select *\
+                    from users\
+                    where user_id = ?;';
+        try{
+            [results, fields] = await connection.query(sql, [userid]);
+        }catch(err){
+            console.log('can not connect');
+            console.log(err);
+            return;
+        }
+        
+        if(bcrypt.compareSync(password, results[0].hashed_password)){
+            res.render(view, {
+                name: '',
+                msg: ''
+            });
+        }else{
+            if(req.session.miss){
+                req.session.miss++;
+            }else{
+                req.session.miss = 1;
+            }
+
+            if(req.session.miss < 5){
+                res.render('pwauth', {
+                    msg: 'パスワードが間違っています'
+                });
+            }else{
+                req.session.miss = null;
+                res.redirect('/logout');
+            }
+        }
+        await connection.release();
     }else if(view){
         res.redirect('/signin');
     }else{
