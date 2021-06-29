@@ -4,7 +4,7 @@ const timer = setInterval(start => {
 
     if(remainTime >= 0){
         let remainDate = new Date(remainTime);
-        let days = parseInt(remainTime / (1000 * 60 * 60 * 24));    //残り日数
+        let days = Math.floor(remainTime / (1000 * 60 * 60 * 24));    //残り日数
         let hour = remainDate.getUTCHours();
         let min = remainDate.getUTCMinutes();
         let sec = remainDate.getUTCSeconds();
